@@ -8,7 +8,7 @@
 // - Optional AI API Key configuration (OpenAI / Gemini)
 
 import { useState } from 'react';
-import { getPrismSystemHealth } from '../services/prism';
+import { getPrismSystemHealth, sendManualPrismTrace } from '../services/prism';
 import { getAllLocations } from '../data/facilities';
 
 function PrismPanel({ isOpen, onClose, facilityStatuses = {} }) {
@@ -19,6 +19,8 @@ function PrismPanel({ isOpen, onClose, facilityStatuses = {} }) {
     () => (typeof window !== 'undefined' ? localStorage.getItem('flow_ai_provider') || 'openai' : 'openai')
   );
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isSendingTrace, setIsSendingTrace] = useState(false);
+  const [manualTraceFeedback, setManualTraceFeedback] = useState(null);
 
   if (!isOpen) return null;
 
@@ -35,6 +37,33 @@ function PrismPanel({ isOpen, onClose, facilityStatuses = {} }) {
     }
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 2500);
+  };
+
+  const handleSendTestTrace = async () => {
+    setIsSendingTrace(true);
+    setManualTraceFeedback(null);
+    try {
+      const res = await sendManualPrismTrace('Dashboard trace triggered manually from PRISM System Health Panel');
+      setIsSendingTrace(false);
+      if (res.success) {
+        setManualTraceFeedback({
+          success: true,
+          traceId: res.traceId,
+          time: new Date().toLocaleTimeString()
+        });
+      } else {
+        setManualTraceFeedback({
+          success: false,
+          error: res.error || 'Failed to dispatch trace'
+        });
+      }
+    } catch (err) {
+      setIsSendingTrace(false);
+      setManualTraceFeedback({
+        success: false,
+        error: err.message
+      });
+    }
   };
 
   return (
@@ -82,15 +111,57 @@ function PrismPanel({ isOpen, onClose, facilityStatuses = {} }) {
           </div>
 
           {/* PRISM Cloud Live Telemetry Stream */}
-          <div className="prism-cloud-banner">
-            <div className="prism-cloud-left">
-              <span className="live-dot"></span>
-              <div>
-                <div className="prism-cloud-status-title">PRISM Cloud Observability: Active & Streaming</div>
-                <div className="prism-cloud-project">Project ID: 13f1907f-0503-4044-8e43-e473d576802c</div>
+          <div className="prism-cloud-box">
+            <div className="prism-cloud-banner">
+              <div className="prism-cloud-left">
+                <span className="live-dot"></span>
+                <div>
+                  <div className="prism-cloud-status-title">PRISM Cloud Observability: Active & Streaming</div>
+                  <div className="prism-cloud-project">Project ID: 13f1907f-0503-4044-8e43-e473d576802c</div>
+                </div>
+              </div>
+              <div className="prism-cloud-actions">
+                <button
+                  type="button"
+                  className="prism-send-trace-btn"
+                  onClick={handleSendTestTrace}
+                  disabled={isSendingTrace}
+                >
+                  {isSendingTrace ? '⚡ Ingesting Trace...' : '🚀 Send Live Trace to PRISM'}
+                </button>
               </div>
             </div>
-            <div className="prism-cloud-tag">Live Sync • 200 OK</div>
+
+            {manualTraceFeedback && (
+              <div className={`prism-trace-result-banner ${manualTraceFeedback.success ? 'trace-success' : 'trace-error'}`}>
+                {manualTraceFeedback.success ? (
+                  <>
+                    <span className="trace-result-icon">✅</span>
+                    <div className="trace-result-text">
+                      <strong>Trace Ingested to PRISM Cloud!</strong>
+                      <div className="trace-id-line">Trace ID: <code>{manualTraceFeedback.traceId}</code> • Time: {manualTraceFeedback.time}</div>
+                      <div className="trace-hint">Live trace recorded! You can now check your PRISM Cloud Dashboard to see this trace and its telemetry evaluation.</div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <span className="trace-result-icon">❌</span>
+                    <div className="trace-result-text">
+                      <strong>Failed to send trace:</strong> {manualTraceFeedback.error}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {!manualTraceFeedback && health.latestTrace && (
+              <div className="prism-trace-result-banner trace-info">
+                <span className="trace-result-icon">📡</span>
+                <div className="trace-result-text">
+                  <strong>Latest Dispatched Trace:</strong> <code>{health.latestTrace.id}</code> ({health.latestTrace.facility}) at {health.latestTrace.time}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Acceleration Status Across Campus */}

@@ -2399,13 +2399,100 @@ body {
   font-family: monospace;
 }
 
-.prism-cloud-tag {
-  background: rgba(16, 185, 129, 0.2);
-  color: #a7f3d0;
-  font-size: 0.72rem;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 6px;
-  white-space: nowrap;
+.prism-cloud-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
+.prism-cloud-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.prism-send-trace-btn {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  color: #ffffff;
+  border: 1px solid rgba(52, 211, 153, 0.4);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+}
+
+.prism-send-trace-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+}
+
+.prism-send-trace-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.prism-trace-result-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  animation: fadeIn 0.3s ease;
+}
+
+.prism-trace-result-banner.trace-success {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #d1fae5;
+}
+
+.prism-trace-result-banner.trace-error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fee2e2;
+}
+
+.prism-trace-result-banner.trace-info {
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #bfdbfe;
+}
+
+.trace-result-icon {
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.trace-result-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.trace-id-line {
+  font-size: 0.75rem;
+  color: #34d399;
+}
+
+.trace-id-line code,
+.trace-result-text code {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: #a7f3d0;
+}
+
+.trace-hint {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin-top: 2px;
+}

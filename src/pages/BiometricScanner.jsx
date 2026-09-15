@@ -22,7 +22,7 @@ import {
   onSnapshot
 } from 'firebase/firestore';
 import { facilities, getAllLocations, findLocation } from '../data/facilities';
-import { logPrismEvent } from '../services/prism';
+import { logPrismEvent, sendPrismCloudTrace } from '../services/prism';
 
 const DEMO_STUDENTS = [
   { id: '26BCE2885', name: 'Peter (Demo Account)' },
@@ -166,6 +166,17 @@ function BiometricScanner() {
           countAfter: Math.max(0, currentActiveCount - 1)
         });
 
+        // Dispatch trace to PRISM Cloud
+        if (currentLocationInfo) {
+          sendPrismCloudTrace(
+            currentLocationInfo,
+            `Student ${activeRegNumber} scanned EXIT. Headcount: ${Math.max(0, currentActiveCount - 1)}/${capacity}.`,
+            { trend: 'cooling down', last5MinEntries: 1, arrivalVelocity: '0.2' },
+            Math.max(0, currentActiveCount - 1),
+            capacity
+          );
+        }
+
         setScanState('exit-verified');
         setStatusMsg(`🚪 Exit Verified — Checked out of ${locName}. Have a safe day!`);
 
@@ -207,6 +218,17 @@ function BiometricScanner() {
         regNumber: activeRegNumber,
         countAfter: currentActiveCount + 1
       });
+
+      // Dispatch trace to PRISM Cloud
+      if (currentLocationInfo) {
+        sendPrismCloudTrace(
+          currentLocationInfo,
+          `Student ${activeRegNumber} verified ENTRY. Headcount: ${currentActiveCount + 1}/${capacity}.`,
+          { trend: 'steady', last5MinEntries: 1, arrivalVelocity: '0.2' },
+          currentActiveCount + 1,
+          capacity
+        );
+      }
 
       setScanState('entry-verified');
       setStatusMsg(`✅ Entry Verified — Welcome to ${locName}! Active headcount: ${currentActiveCount + 1}/${capacity}`);

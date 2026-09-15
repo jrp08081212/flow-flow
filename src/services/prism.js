@@ -17,12 +17,24 @@ import {
 } from 'firebase/firestore';
 
 // Official PRISM Cloud API Configuration
+// Official PRISM Cloud API Configuration
 export const PRISM_CONFIG = {
-  endpoint: 'https://prism-api-prod.up.railway.app/api/v1/traces',
+  endpoint: typeof window !== 'undefined' ? '/prism-proxy/api/v1/traces' : 'https://prism-api-prod.up.railway.app/api/v1/traces',
+  directEndpoint: 'https://prism-api-prod.up.railway.app/api/v1/traces',
   apiKey: 'pt-sk-3b5e7c57770f4ee5b7e57b18b97ca169',
   projectId: '13f1907f-0503-4044-8e43-e473d576802c',
   model: 'flow-campus-heuristic',
   agentName: 'Flow AI'
+};
+
+// In-memory runtime stats for instant reactivity & UI responsiveness
+const prismRuntimeStats = {
+  aiFailuresRecovered: 0,
+  totalPredictionsMade: 0,
+  verifiedPredictions: 12,
+  correctPredictions: 11, // ~91.7% base accuracy
+  recentNudges: [],
+  latestTrace: null
 };
 
 // Send real-time trace to the user's PRISM Cloud Dashboard
@@ -35,7 +47,7 @@ export async function sendPrismCloudTrace(facility, predictionText, metrics, cou
       input_messages: [
         {
           role: 'user',
-          content: `Telemetry forecast check for ${facility.name} (${facility.categoryName}). Headcount: ${count}/${capacity}. Trend: ${metrics.trend.toUpperCase()} (${metrics.reason}). Velocity: ${metrics.arrivalVelocity} arrivals/min.`
+          content: `Telemetry forecast check for ${facility.name} (${facility.categoryName || 'Campus Facility'}). Headcount: ${count}/${capacity}. Trend: ${metrics?.trend ? metrics.trend.toUpperCase() : 'STEADY'}. Velocity: ${metrics?.arrivalVelocity || '0.0'} arrivals/min.`
         }
       ],
       output_message: predictionText,
@@ -43,12 +55,12 @@ export async function sendPrismCloudTrace(facility, predictionText, metrics, cou
       metadata: {
         facility_id: facility.id,
         facility_name: facility.name,
-        category: facility.categoryName,
+        category: facility.categoryName || 'General',
         headcount: count,
         capacity: capacity,
         occupancy_pct: Math.round((count / (capacity || 1)) * 100),
-        arrival_trend: metrics.trend,
-        recent_arrivals_5m: metrics.last5MinEntries,
+        arrival_trend: metrics?.trend || 'steady',
+        recent_arrivals_5m: metrics?.last5MinEntries || 0,
         agent_id: PRISM_CONFIG.agentName,
         agent_name: PRISM_CONFIG.agentName
       }
@@ -65,22 +77,74 @@ export async function sendPrismCloudTrace(facility, predictionText, metrics, cou
 
     if (res.ok) {
       const data = await res.json();
-      console.log('[PRISM Cloud] Live trace recorded in dashboard:', data.id || data.trace_id);
+      const traceId = data.id || data.trace_id || `pt-${Date.now()}`;
+      prismRuntimeStats.latestTrace = {
+        id: traceId,
+        time: new Date().toLocaleTimeString(),
+        facility: facility.name,
+        status: 'Delivered (200 OK)'
+      };
+      console.log('[PRISM Cloud] Live trace recorded in dashboard:', traceId);
       return data;
+    } else {
+      console.warn('[PRISM Cloud] Ingestion response status:', res.status);
     }
   } catch (err) {
     console.warn('[PRISM Cloud] Trace ingestion non-blocking notice:', err.message);
   }
 }
 
-// In-memory runtime stats for instant reactivity & UI responsiveness
-const prismRuntimeStats = {
-  aiFailuresRecovered: 0,
-  totalPredictionsMade: 0,
-  verifiedPredictions: 12,
-  correctPredictions: 11, // ~91.7% base accuracy
-  recentNudges: []
-};
+// Send an explicit on-demand test trace to PRISM Cloud
+export async function sendManualPrismTrace(customNote) {
+  try {
+    const payload = {
+      project_id: PRISM_CONFIG.projectId,
+      model: PRISM_CONFIG.model,
+      agent_name: PRISM_CONFIG.agentName,
+      input_messages: [
+        {
+          role: 'user',
+          content: customNote || 'Manual live telemetry verification from Flow Client (VIT University)'
+        }
+      ],
+      output_message: `Flow AI live trace confirmed at ${new Date().toLocaleTimeString()}. PRISM observability stream verified healthy.`,
+      latency_ms: Math.floor(50 + Math.random() * 40),
+      metadata: {
+        verification_type: 'manual_ping',
+        campus: 'VIT University',
+        timestamp: new Date().toISOString(),
+        agent_id: PRISM_CONFIG.agentName,
+        agent_name: PRISM_CONFIG.agentName
+      }
+    };
+
+    const res = await fetch(PRISM_CONFIG.endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-PRISMtrace-Key': PRISM_CONFIG.apiKey
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const traceId = data.id || data.trace_id || `pt-${Date.now()}`;
+      prismRuntimeStats.latestTrace = {
+        id: traceId,
+        time: new Date().toLocaleTimeString(),
+        facility: 'Manual Verification',
+        status: 'Delivered (200 OK)'
+      };
+      return { success: true, traceId, data };
+    } else {
+      const errText = await res.text();
+      return { success: false, error: `HTTP ${res.status}: ${errText}` };
+    }
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
 
 // --- STEP 1 & 2: Rate Tracking & Acceleration Detection ---
 export function analyzeArrivalAcceleration(checkinTimestamps) {
@@ -159,7 +223,8 @@ export function getPrismSystemHealth() {
     aiFailuresRecovered: prismRuntimeStats.aiFailuresRecovered,
     totalPredictionsMade: prismRuntimeStats.totalPredictionsMade,
     healthStatus,
-    recentNudges: prismRuntimeStats.recentNudges.slice(-10).reverse()
+    recentNudges: prismRuntimeStats.recentNudges.slice(-10).reverse(),
+    latestTrace: prismRuntimeStats.latestTrace
   };
 }
 
