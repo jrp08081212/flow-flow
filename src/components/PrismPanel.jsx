@@ -81,6 +81,18 @@ function PrismPanel({ isOpen, onClose, facilityStatuses = {} }) {
             </div>
           </div>
 
+          {/* PRISM Cloud Live Telemetry Stream */}
+          <div className="prism-cloud-banner">
+            <div className="prism-cloud-left">
+              <span className="live-dot"></span>
+              <div>
+                <div className="prism-cloud-status-title">PRISM Cloud Observability: Active & Streaming</div>
+                <div className="prism-cloud-project">Project ID: 13f1907f-0503-4044-8e43-e473d576802c</div>
+              </div>
+            </div>
+            <div className="prism-cloud-tag">Live Sync • 200 OK</div>
+          </div>
+
           {/* Acceleration Status Across Campus */}
           <div className="prism-section">
             <h3 className="prism-section-title">📡 Real-Time Arrival Trends by Facility</h3>

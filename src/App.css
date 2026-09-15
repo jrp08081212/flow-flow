@@ -2369,3 +2369,43 @@ body {
   text-align: center;
 }
 
+/* PRISM Cloud Live Telemetry Banner */
+.prism-cloud-banner {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(6, 78, 59, 0.25) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.prism-cloud-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.prism-cloud-status-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #34d399;
+}
+
+.prism-cloud-project {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-family: monospace;
+}
+
+.prism-cloud-tag {
+  background: rgba(16, 185, 129, 0.2);
+  color: #a7f3d0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
