@@ -1,0 +1,7 @@
+/* Base body styles - no Tailwind needed, App.css handles everything */
+body {
+  margin: 0;
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background-color: #f9fafb;
+  -webkit-font-smoothing: antialiased;
+}
