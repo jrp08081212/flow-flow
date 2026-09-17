@@ -1,6 +1,6 @@
-// App.jsx — The main "router" that decides which screen to show
-// based on the URL path. Think of it as a switchboard.
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+// App.jsx — SILHOUETTE-SHIFT Game Router (Itch.io Compatible)
+import { HashRouter, Routes, Route } from 'react-router-dom';
+import SilhouetteGame from './components/SilhouetteGame';
 import CampusSelection from './pages/CampusSelection';
 import Login from './pages/Login';
 import FacilityCategories from './pages/FacilityCategories';
@@ -10,27 +10,22 @@ import BiometricScanner from './pages/BiometricScanner';
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
-        {/* Screen 1: Pick your campus */}
-        <Route path="/" element={<CampusSelection />} />
+        {/* Flagship: SILHOUETTE-SHIFT Itch.io Game */}
+        <Route path="/" element={<SilhouetteGame />} />
+        <Route path="/game" element={<SilhouetteGame />} />
+        <Route path="/silhouette-shift" element={<SilhouetteGame />} />
 
-        {/* Screen 2: Log in with your VIT credentials */}
+        {/* Legacy Routes */}
+        <Route path="/campus" element={<CampusSelection />} />
         <Route path="/login" element={<Login />} />
-
-        {/* Screen 3: Choose a facility category (Messes, Gyms, etc.) */}
         <Route path="/facilities" element={<FacilityCategories />} />
-
-        {/* Screen 4: See specific locations within a category */}
         <Route path="/facilities/:categoryId" element={<SubLocations />} />
-
-        {/* Screen 5: Live crowd data for a specific location */}
         <Route path="/location/:locationId" element={<LiveCrowd />} />
-
-        {/* Biometric Scanner: separate terminal interface */}
         <Route path="/biometric" element={<BiometricScanner />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
