@@ -48,6 +48,15 @@ export default function SilhouetteGame() {
     gameCoreRef.current.silhouetteTracker.updatePuppetMouse(normX, normY);
   }, []);
 
+  const handleCanvasClick = useCallback(() => {
+    if (gameCoreRef.current) {
+      gameCoreRef.current.sfx.ensureContext();
+      if (!gameCoreRef.current.sfx.isMusicRunning) {
+        gameCoreRef.current.sfx.startMusic();
+      }
+    }
+  }, []);
+
   const handleSelectRound = (idx) => {
     if (gameCoreRef.current) {
       gameCoreRef.current.loadRound(idx);
